@@ -1,19 +1,32 @@
 # TODO: Separate modules
 function Test-ADModule {
-    
+
     $result = $false
 
-    if (Get-Module -ListAvailable -Name ActiveDirectory) {
+    try {
+        Get-Module -ListAvailable -Name ActiveDirectory
         $result = $true
-    } 
+    }
+    catch {
+        $result = $false
+    }
 
     return $result
 }
 
 function Test-ADConnection {
 
-    return Test-ComputerSecureChannel
+    $result = $false
 
+    try {
+        Test-ComputerSecureChannel -ErrorAction Stop
+        $result = $true
+    }
+    catch {
+        $result = $false
+    }
+    
+    return $result
 }
 
 function Test-DomainControllers {
@@ -31,7 +44,7 @@ function Test-DomainControllers {
     return $result
 }
 
-function Invoke-Tests {
+function Invoke-PreChecks {
     param (
         $verbose = $false
     )
@@ -51,5 +64,4 @@ function Invoke-Tests {
     return $true
 }
 
-$pre_checks_result = Invoke-Tests $false
-Write-Host $pre_checks_result
+Invoke-PreChecks -verbose $false
