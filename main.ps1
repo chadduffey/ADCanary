@@ -1,4 +1,4 @@
-
+# TODO: Separate modules
 function Test-ADModule {
     
     $result = $false
@@ -21,8 +21,8 @@ function Test-DomainControllers {
     $result = $false
 
     try {
-        Get-ADDomainController -Discover -ErrorAction Stop
-        $result = $true
+        $dcs = (Get-ADDomainController -filter * -ErrorAction Stop)
+        if ($dcs.Count -gt 0) {$result = $true}
     }
     catch {
         $result = $false
@@ -31,15 +31,25 @@ function Test-DomainControllers {
     return $result
 }
 
+function Invoke-Tests {
+    param (
+        $verbose = $false
+    )
 
-$ModuleReady = Test-ADModule
-Write-Host $ModuleReady
+    $ModuleReady = Test-ADModule
+    if ($verbose){Write-Host "Test-ADModule:" $ModuleReady}
+    if ($ModuleReady -eq $false) {return $false}
 
-$ADReady = Test-ADConnection
-Write-Host $ADReady
+    $ADReady = Test-ADConnection
+    if ($verbose){Write-Host "Test-ADConnection:" $ADReady}
+    if ($ADReady -eq $false) {return $false}
 
-$DCsReady = Test-DomainControllers
-Write-Host $DCsReady
+    $DCsReady = Test-DomainControllers
+    if ($verbose){Write-Host "Test-DomainControllers:" $DCsReady}
+    if ($DCsReady -eq $false) {return $false}
 
+    return $true
+}
 
-
+$pre_checks_result = Invoke-Tests $false
+Write-Host $pre_checks_result
