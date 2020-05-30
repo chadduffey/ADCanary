@@ -32,7 +32,7 @@ function Test-ADConnection {
 function Test-DomainControllers {
 
     $result = $false
-    
+
     try {
         $dcs = (Get-ADDomainController -filter * -ErrorAction Stop)
         if ($dcs.Count -gt 0) {$result = $true}
@@ -64,4 +64,25 @@ function Invoke-PreChecks {
     return $true
 }
 
+function Update-ADObject{
+    param (
+        $objectDN = "CN=CanaryGroup,OU=Groups,DC=jmpesp,DC=xyz"
+    )
+
+    $success = $false
+
+    try {
+        Get-ADObject -Identity $objectDN | Set-ADObject -Description '.'
+        $success = $true
+    }
+    catch {
+        $success = $false
+    }
+
+    return $success
+    
+}
+
+
 Invoke-PreChecks -verbose $false
+Update-ADObject

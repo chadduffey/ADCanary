@@ -50,3 +50,17 @@ Describe "Invoke-PreChecks" {
         Invoke-PreChecks | Should Be $false
     }
 }
+
+Describe "Update-ADObject" {
+    Mock Set-ADObject {return $true}
+
+    It "Returns true when AD returns success in writing the object" {
+        Update-ADObject | Should Be $true
+    }
+
+    Mock Set-ADObject {Throw "Oh no!"}
+    
+    It "Returns false when AD is not able to update the object and throws an error" {
+        Update-ADObject | Should Be $false
+    }
+}
