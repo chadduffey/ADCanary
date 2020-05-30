@@ -32,7 +32,7 @@ function Test-ADConnection {
 function Test-DomainControllers {
 
     $result = $false
-
+    
     try {
         $dcs = (Get-ADDomainController -filter * -ErrorAction Stop)
         if ($dcs.Count -gt 0) {$result = $true}
