@@ -64,25 +64,56 @@ function Invoke-PreChecks {
     return $true
 }
 
-function Update-ADObject{
-    param (
-        $objectDN = "CN=CanaryGroup,OU=Groups,DC=jmpesp,DC=xyz"
+function Get-CanaryName {
+    $canary_name = Get-Date -Format "yyyy_MM_dd___HH-mm-ss"
+    return $canary_name
+}
+
+function Get-CanaryDN {
+    param(
+        [Parameter(Mandatory=$true)][psobject]$name
     )
+    $DN = Get-ADObject -Filter 'Name -eq $name'
+    return $DN
+}
 
-    $success = $false
+function Get-AllDomainControllers{
+    return (Get-ADForest).Domains | %{ Get-ADDomainController -Filter * -Server $_ }
+}
 
-    try {
-        Get-ADObject -Identity $objectDN | Set-ADObject -Description '.'
-        $success = $true
+function Get-UpdateStatus{
+    param(
+        [Parameter(Mandatory=$true)][psobject]$canary,
+        [Parameter(Mandatory=$true)][psobject]$dcName
+    )
+    Get-ADObject -Identity $canary.DistinguishedName -Server $dcName
+}
+
+function Confirm-Updates{
+    param (
+        [Parameter(Mandatory=$true)][psobject]$domainControllers,
+        [Parameter(Mandatory=$true)][psobject]$canary,
+        $verbosemode=$false
+    )
+    
+    foreach($dc in $domainControllers){
+        write-host "Processing" $dc.Name
+        #Create Job Object Loop here:
+        Get-UpdateStatus -canary $canaryName -dcName $dc
     }
-    catch {
-        $success = $false
-    }
-
-    return $success
     
 }
 
+$CANARYPATH = "OU=Canaries,DC=jmpesp,DC=xyz"
 
-Invoke-PreChecks -verbose $false
-Update-ADObject
+Invoke-PreChecks -verbose $false | out-null
+$canary_name = Get-CanaryName
+New-ADObject -type contact -path $CANARYPATH -Name $canary_name
+$canary_dn = Get-CanaryDN -name $canary_name
+Write-Host $canary_dn.DistinguishedName
+
+#$allDomainControllers = Get-AllDomainControllers
+#Confirm-Updates -domainControllers $allDomainControllers -canary $canary -verbosemode $true
+
+#TESTONLY: Update-ADObject -objectDN $CANARYDistinguishedName | out-null
+
